@@ -91,6 +91,7 @@
         </li>`
       })
       listElement.innerHTML = commentsList.join('');
+      addLike();
     }
 
     renderComments();
@@ -109,34 +110,36 @@
         return;
       }
       
-      comments.push({
+      const newComment = {
         name: nameInputElement.value,
         date: fullDate,
         text: commentInputElement.value,
         likesCount: 0,
         isLiked: false
-      })
+      }
 
+      comments.push(newComment); 
       renderComments();
       nameInputElement.value = "";
       commentInputElement.value = "";
-
     });
 
-    const likeButtonsElements = document.querySelectorAll('.like-button');
+    function addLike () {
+      const likeButtonsElements = document.querySelectorAll('.like-button');
 
-    for (const likeButtonElement of likeButtonsElements) {
-      const index = likeButtonElement.dataset.index;
-      likeButtonElement.addEventListener('click', () => {
-        if (!comments[index].isLiked) {
-          likeButtonElement.classList.add("-active-like");
-          comments[index].isLiked = true;
-          comments[index].likesCount++;
-          renderComments();
-        }
-      })   
+      for (const likeButtonElement of likeButtonsElements) {
+        const index = likeButtonElement.dataset.index;
+        likeButtonElement.addEventListener('click', () => {
+          if (!comments[index].isLiked) {
+            comments[index].isLiked = true;
+            comments[index].likesCount++;
+            likeButtonElement.classList.add("-active-like");
+            const likesCounter = likeButtonElement.parentElement.querySelector('.likes-counter');
+            likesCounter.textContent = comments[index].likesCount;
+          }
+        })   
+      }
     }
-
 
 
     deleteElement.addEventListener('click', () => {
