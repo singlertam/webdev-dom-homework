@@ -134,8 +134,6 @@
             comments[index].isLiked = true;
             comments[index].likesCount++;
             likeButtonElement.classList.add("-active-like");
-            const likesCounter = likeButtonElement.parentElement.querySelector('.likes-counter');
-            likesCounter.textContent = comments[index].likesCount;
           }
         })   
       }
