@@ -85,7 +85,7 @@
           <div class="comment-footer">
             <div class="likes">
               <span data-type="isLiked" class="likes-counter">${comment.likesCount}</span>
-              <button data-index="${index}" class="like-button"></button>
+              <button data-index="${index}" class="like-button ${comment.isLiked ? "-active-like" : ""}"></button>
             </div>
           </div>
         </li>`
@@ -130,15 +130,19 @@
       for (const likeButtonElement of likeButtonsElements) {
         const index = likeButtonElement.dataset.index;
         likeButtonElement.addEventListener('click', () => {
-          if (!comments[index].isLiked) {
+          if(!comments[index].isLiked) {
             comments[index].isLiked = true;
             comments[index].likesCount++;
             likeButtonElement.classList.add("-active-like");
+          } else {
+            comments[index].isLiked = false;
+            comments[index].likesCount--;
+            likeButtonElement.classList.remove("-active-like");
           }
+          renderComments();
         })   
       }
     }
-
 
     deleteElement.addEventListener('click', () => {
       const commentsList = listElement.innerHTML;
