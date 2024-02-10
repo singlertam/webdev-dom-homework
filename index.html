@@ -43,14 +43,14 @@
 
     const likesCount = document.querySelectorAll('.likes-counter');
 
-    const now = new Date();
-    const year = now.getFullYear().toString().slice(-2); 
-    const month = (now.getMonth() + 1).toString().padStart(2, '0'); 
-    const day = now.getDate().toString().padStart(2, '0'); 
-    const hours = now.getHours().toString().padStart(2, '0'); 
-    const minutes = now.getMinutes().toString().padStart(2, '0');
+    // const now = new Date();
+    // const year = now.getFullYear().toString().slice(-2); 
+    // const month = (now.getMonth() + 1).toString().padStart(2, '0'); 
+    // const day = now.getDate().toString().padStart(2, '0'); 
+    // const hours = now.getHours().toString().padStart(2, '0'); 
+    // const minutes = now.getMinutes().toString().padStart(2, '0');
 
-    const fullDate = `${day}.${month}.${year} ${hours}:${minutes}`;
+    // const fullDate = `${day}.${month}.${year} ${hours}:${minutes}`;
 
     const comments = [
       {
@@ -105,10 +105,19 @@
     buttonElement.addEventListener('click', () => {
       buttonElement.classList.remove("error"); 
 
-      if(nameInputElement.value === '' || commentInputElement.value === '') {
+      if(nameInputElement.value.trim() === '' || commentInputElement.value.trim() === '') {
         buttonElement.classList.add("error");  
         return;
-      }
+      } 
+
+      const now = new Date();
+      const year = now.getFullYear().toString().slice(-2); 
+      const month = (now.getMonth() + 1).toString().padStart(2, '0'); 
+      const day = now.getDate().toString().padStart(2, '0'); 
+      const hours = now.getHours().toString().padStart(2, '0'); 
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+
+      const fullDate = `${day}.${month}.${year} ${hours}:${minutes}`;
       
       const newComment = {
         name: nameInputElement.value,
@@ -124,6 +133,18 @@
       commentInputElement.value = "";
     });
 
+    nameInputElement.addEventListener('input', () => {
+      if(nameInputElement.value.trim() !== '') {
+        buttonElement.classList.remove("error");
+      }
+    });
+
+    commentInputElement.addEventListener('input', () => {
+      if(commentInputElement.value.trim() !== '') {
+        buttonElement.classList.remove("error");
+      }
+    });
+
     function addLike () {
       const likeButtonsElements = document.querySelectorAll('.like-button');
 
@@ -137,7 +158,6 @@
           } else {
             comments[index].isLiked = false;
             comments[index].likesCount--;
-            likeButtonElement.classList.remove("-active-like");
           }
           renderComments();
         })   
