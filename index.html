@@ -43,15 +43,6 @@
 
     const likesCount = document.querySelectorAll('.likes-counter');
 
-    // const now = new Date();
-    // const year = now.getFullYear().toString().slice(-2); 
-    // const month = (now.getMonth() + 1).toString().padStart(2, '0'); 
-    // const day = now.getDate().toString().padStart(2, '0'); 
-    // const hours = now.getHours().toString().padStart(2, '0'); 
-    // const minutes = now.getMinutes().toString().padStart(2, '0');
-
-    // const fullDate = `${day}.${month}.${year} ${hours}:${minutes}`;
-
     const comments = [
       {
         name: 'Глеб Фокин',
@@ -120,9 +111,9 @@
       const fullDate = `${day}.${month}.${year} ${hours}:${minutes}`;
       
       const newComment = {
-        name: nameInputElement.value,
+        name: nameInputElement.value.replaceAll('<', '&lt;').replaceAll('>', '&gt;'),
         date: fullDate,
-        text: commentInputElement.value,
+        text: commentInputElement.value.replaceAll('<', '&lt;').replaceAll('>', '&gt;'),
         likesCount: 0,
         isLiked: false
       }
@@ -163,6 +154,37 @@
         })   
       }
     }
+
+    // const commentElements = document.querySelectorAll('.comment');
+    //   commentElements.forEach((commentElement, index) => {
+    //     commentElement.addEventListener('click', (event) => {
+    //       event.stopPropagation();
+    //       const selectedComment = comments[index]; 
+    //       commentInputElement.value = selectedComment.text + '\n' + selectedComment.name;
+    //     });
+    // });
+
+    // const commentElements = document.querySelectorAll('.comment');
+    // commentElements.forEach((commentElement, index) => {
+    //   commentElement.addEventListener('click', (event) => {
+    //     event.stopPropagation();
+    //     const selectedComment = comments[index]; 
+    //     commentInputElement.value = `${selectedComment.text}\n${selectedComment.name}`;
+    //   });
+    // });
+
+    const commentElements = document.querySelectorAll('.comment');
+    function replyToComment() {
+      commentElements.forEach((commentElement, index) => {
+      commentElement.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const selectedComment = comments[index]; 
+        commentInputElement.value = `${selectedComment.text}\n${selectedComment.name}`;
+      });
+      });
+    }
+
+    replyToComment();
 
     deleteElement.addEventListener('click', () => {
       const commentsList = listElement.innerHTML;
