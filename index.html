@@ -145,33 +145,18 @@
           if(!comments[index].isLiked) {
             comments[index].isLiked = true;
             comments[index].likesCount++;
-            likeButtonElement.classList.add("-active-like");
           } else {
             comments[index].isLiked = false;
             comments[index].likesCount--;
           }
           renderComments();
         })   
+
+        likeButtonElement.addEventListener('click', (event) => {
+          event.stopPropagation();
+        });
       }
     }
-
-    // const commentElements = document.querySelectorAll('.comment');
-    //   commentElements.forEach((commentElement, index) => {
-    //     commentElement.addEventListener('click', (event) => {
-    //       event.stopPropagation();
-    //       const selectedComment = comments[index]; 
-    //       commentInputElement.value = selectedComment.text + '\n' + selectedComment.name;
-    //     });
-    // });
-
-    // const commentElements = document.querySelectorAll('.comment');
-    // commentElements.forEach((commentElement, index) => {
-    //   commentElement.addEventListener('click', (event) => {
-    //     event.stopPropagation();
-    //     const selectedComment = comments[index]; 
-    //     commentInputElement.value = `${selectedComment.text}\n${selectedComment.name}`;
-    //   });
-    // });
 
     const commentElements = document.querySelectorAll('.comment');
     function replyToComment() {
