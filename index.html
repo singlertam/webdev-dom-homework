@@ -8,8 +8,7 @@
 
   <body>
     <div class="container">
-      <ul id="list" class="comments">
-      </ul>
+      <ul id="list" class="comments"></ul>
       <div class="add-form">
         <input
           id="name-input"
@@ -27,7 +26,9 @@
         ></textarea>
         <div class="add-form-row">
           <button id="add-button" class="add-form-button">Написать</button>
-          <button id="delete-button"class="delete-form-button">Удалить комментарий</button>
+          <button id="delete-button" class="delete-form-button">
+            Удалить комментарий
+          </button>
         </div>
       </div>
     </div>
@@ -35,33 +36,15 @@
 
   <script>
     "use strict";
-    const buttonElement = document.getElementById('add-button');
-    const deleteElement = document.getElementById('delete-button');
-    const listElement = document.getElementById('list');
-    const nameInputElement = document.getElementById('name-input');
-    const commentInputElement = document.getElementById('comment-input');
+    const buttonElement = document.getElementById("add-button");
+    const deleteElement = document.getElementById("delete-button");
+    const listElement = document.getElementById("list");
+    const nameInputElement = document.getElementById("name-input");
+    const commentInputElement = document.getElementById("comment-input");
 
-    const likesCount = document.querySelectorAll('.likes-counter');
+    let comments = [];
 
-    const comments = [
-      {
-        name: 'Глеб Фокин',
-        date: '12.02.22 12:18',
-        text: 'Это будет первый комментарий на этой странице',
-        likesCount: 3,
-        isLiked: false
-      },
-
-      {
-        name: 'Варвара Н.',
-        date: '13.02.22 19:22',
-        text: 'Мне нравится как оформлена эта страница! ❤',
-        likesCount: 75,
-        isLiked: false
-      }
-    ]
-
-    function renderComments () {
+    function renderComments() {
       const commentsList = comments.map((comment, index) => {
         return `<li class="comment">
           <div class="comment-header">
@@ -75,74 +58,115 @@
           </div>
           <div class="comment-footer">
             <div class="likes">
-              <span data-type="isLiked" class="likes-counter">${comment.likesCount}</span>
-              <button data-index="${index}" class="like-button ${comment.isLiked ? "-active-like" : ""}"></button>
+              <span class="likes-counter">${comment.likesCount}</span>
+              <button data-index="${index}" class="like-button ${
+          comment.isLiked ? "-active-like" : ""
+        }"></button>
             </div>
           </div>
-        </li>`
-      })
-      listElement.innerHTML = commentsList.join('');
+        </li>`;
+      });
+      listElement.innerHTML = commentsList.join("");
       addLike();
+      replyToComment();
     }
 
-    renderComments();
+    function fetchComments() {
+      fetch("https://wedev-api.sky.pro/api/v1/magomed-alarkhanov/comments")
+        .then((response) => response.json())
+        .then((responseData) => {
+          comments = responseData.comments.map((comment) => ({
+            name: comment.author.name,
+            date: comment.date,
+            text: comment.text,
+            likesCount: comment.likes,
+            isLiked: false,
+          }));
+          renderComments();
+        })
+        .catch((error) => console.error(error));
+    }
 
-    commentInputElement.addEventListener('keyup', () => {
-      if (event.key === 'Enter') {
-        buttonElement.click(); 
-      }
-    });
+    fetchComments();
 
-    buttonElement.addEventListener('click', () => {
-      buttonElement.classList.remove("error"); 
-
-      if(nameInputElement.value.trim() === '' || commentInputElement.value.trim() === '') {
-        buttonElement.classList.add("error");  
+    buttonElement.addEventListener("click", () => {
+      if (
+        nameInputElement.value.trim() === "" ||
+        commentInputElement.value.trim() === ""
+      ) {
+        buttonElement.classList.add("error");
         return;
-      } 
-
-      const now = new Date();
-      const year = now.getFullYear().toString().slice(-2); 
-      const month = (now.getMonth() + 1).toString().padStart(2, '0'); 
-      const day = now.getDate().toString().padStart(2, '0'); 
-      const hours = now.getHours().toString().padStart(2, '0'); 
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-
-      const fullDate = `${day}.${month}.${year} ${hours}:${minutes}`;
-      
-      const newComment = {
-        name: nameInputElement.value.replaceAll('<', '&lt;').replaceAll('>', '&gt;'),
-        date: fullDate,
-        text: commentInputElement.value.replaceAll('<', '&lt;').replaceAll('>', '&gt;'),
-        likesCount: 0,
-        isLiked: false
       }
 
-      comments.push(newComment); 
+      function formatDate(date) {
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const year = String(date.getFullYear()).slice(-2);
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        const seconds = String(date.getSeconds()).padStart(2, "0");
+
+        return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
+      }
+
+      const currentDate = new Date();
+      const formattedDate = formatDate(currentDate);
+
+      const newComment = {
+        name: nameInputElement.value
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;"),
+        date: formattedDate,
+        text: commentInputElement.value
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;"),
+        likesCount: 0,
+        isLiked: false,
+      };
+
+      comments.push(newComment);
       renderComments();
+
+      fetch("https://wedev-api.sky.pro/api/v1/magomed-alarkhanov/comments", {
+        method: "POST",
+        body: JSON.stringify({
+          name: newComment.name,
+          date: newComment.fullDate,
+          text: newComment.text,
+          likes: newComment.likesCount,
+          isLiked: newComment.isLiked,
+        }),
+      })
+        .then((response) => response.json())
+        .then((responseData) => {
+          console.log(responseData);
+        })
+        .catch((error) => console.error(error));
+
       nameInputElement.value = "";
       commentInputElement.value = "";
     });
 
-    nameInputElement.addEventListener('input', () => {
-      if(nameInputElement.value.trim() !== '') {
+    nameInputElement.addEventListener("input", () => {
+      if (nameInputElement.value.trim() !== "") {
         buttonElement.classList.remove("error");
       }
     });
 
-    commentInputElement.addEventListener('input', () => {
-      if(commentInputElement.value.trim() !== '') {
+    commentInputElement.addEventListener("input", () => {
+      if (commentInputElement.value.trim() !== "") {
         buttonElement.classList.remove("error");
       }
     });
 
-    function addLike () {
-      const likeButtonsElements = document.querySelectorAll('.like-button');
+    function addLike() {
+      const likeButtonsElements = document.querySelectorAll(".like-button");
 
-      for (const likeButtonElement of likeButtonsElements) {
-        const index = likeButtonElement.dataset.index;
-        likeButtonElement.addEventListener('click', () => {
-          if(!comments[index].isLiked) {
+      likeButtonsElements.forEach((likeButtonElement) => {
+        likeButtonElement.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const index = parseInt(likeButtonElement.dataset.index);
+          if (!comments[index].isLiked) {
             comments[index].isLiked = true;
             comments[index].likesCount++;
           } else {
@@ -150,34 +174,28 @@
             comments[index].likesCount--;
           }
           renderComments();
-        })   
-
-        likeButtonElement.addEventListener('click', (event) => {
-          event.stopPropagation();
         });
-      }
+      });
     }
 
-    const commentElements = document.querySelectorAll('.comment');
     function replyToComment() {
+      const commentElements = document.querySelectorAll(".comment");
       commentElements.forEach((commentElement, index) => {
-      commentElement.addEventListener('click', (event) => {
-        event.stopPropagation();
-        const selectedComment = comments[index]; 
-        commentInputElement.value = `${selectedComment.text}\n${selectedComment.name}`;
-      });
+        commentElement.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const selectedComment = comments[index];
+          commentInputElement.value = `${selectedComment.text}\n${selectedComment.name}`;
+        });
       });
     }
 
-    replyToComment();
-
-    deleteElement.addEventListener('click', () => {
-      const commentsList = listElement.innerHTML;
-      const lastCommentIndex = commentsList.lastIndexOf('<li class="comment">');
-      if (lastCommentIndex !== -1) {
-        listElement.innerHTML = commentsList.substring(0, lastCommentIndex);
+    deleteElement.addEventListener("click", () => {
+      const lastCommentElement = listElement.querySelector(
+        "li.comment:last-child"
+      );
+      if (lastCommentElement) {
+        listElement.removeChild(lastCommentElement);
       }
     });
-
   </script>
 </html>
