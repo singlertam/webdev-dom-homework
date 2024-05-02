@@ -131,10 +131,7 @@
         method: "POST",
         body: JSON.stringify({
           name: newComment.name,
-          date: newComment.fullDate,
           text: newComment.text,
-          likes: newComment.likesCount,
-          isLiked: newComment.isLiked,
         }),
       })
         .then((response) => response.json())
