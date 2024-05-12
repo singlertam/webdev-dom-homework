@@ -8,42 +8,8 @@
 
   <body>
     <div class="container">
-      <ul class="comments">
-        <li class="comment">
-          <div class="comment-header">
-            <div>Глеб Фокин</div>
-            <div>12.02.22 12:18</div>
-          </div>
-          <div class="comment-body">
-            <div class="comment-text">
-              Это будет первый комментарий на этой странице
-            </div>
-          </div>
-          <div class="comment-footer">
-            <div class="likes">
-              <span class="likes-counter">3</span>
-              <button class="like-button"></button>
-            </div>
-          </div>
-        </li>
-        <li class="comment">
-          <div class="comment-header">
-            <div>Варвара Н.</div>
-            <div>13.02.22 19:22</div>
-          </div>
-          <div class="comment-body">
-            <div class="comment-text">
-              Мне нравится как оформлена эта страница! ❤
-            </div>
-          </div>
-          <div class="comment-footer">
-            <div class="likes">
-              <span class="likes-counter">75</span>
-              <button class="like-button -active-like"></button>
-            </div>
-          </div>
-        </li>
-      </ul>
+      <div id="loading-comments">Комментарии загружаются...</div>
+      <ul class="comments"></ul>
       <div class="add-form">
         <input
           type="text"
@@ -57,15 +23,264 @@
           rows="4"
         ></textarea>
         <div class="add-form-row">
-          <button class="add-form-button">Написать</button>
+          <button class="add-form-button">Отправить</button>
+          <button id="delete-button" class="delete-form-button">
+            Удалить комментарий
+          </button>
         </div>
       </div>
+      <div class="add-form" id="pending-comment">Коментарий добавляется...</div>
     </div>
   </body>
 
   <script>
     "use strict";
     // Код писать здесь
-    console.log("It works!");
+    const listElement = document.querySelector(".comments");
+    const addBtn = document.querySelector(".add-form-button");
+    const nameInput = document.querySelector(".add-form-name");
+    const commentInput = document.querySelector(".add-form-text");
+    const deleteBtn = document.querySelector(".delete-form-button");
+
+    const addForm = document.querySelector(".add-form");
+    const pendingBlock = document.getElementById("pending-comment");
+
+    const loadingCommentsBlock = document.getElementById("loading-comments");
+
+    fetch("https://wedev-api.sky.pro/api/v1/magomed-alarkhanov/comments", {
+      method: "GET",
+    })
+      .then((response) => {
+        loadingCommentsBlock.style.display = "block";
+        return response.json();
+      })
+      .then((responseData) => {
+        loadingCommentsBlock.style.display = "none";
+
+        comments = responseData.comments.map((comment) => ({
+          name: comment.author.name,
+          text: comment.text,
+          isLiked: comment.isLiked,
+          likesCount: comment.likes,
+        }));
+        renderComments();
+      });
+
+    let comments = [];
+
+    function formatDate(date) {
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = String(date.getFullYear()).slice(-2);
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+
+      return `${day}.${month}.${year} ${hours}:${minutes}`;
+    }
+
+    const currentDate = new Date();
+    const formattedDate = formatDate(currentDate);
+
+    const renderComments = () => {
+      const commentsList = comments.map((comment, index) => {
+        return `
+        <li class="comment" data-text="${comment.text}"" data-name="${
+          comment.name
+        }">
+          <div class="comment-header">
+            <div>${comment.name}</div>
+            <div>${formattedDate}</div>
+          </div>
+          <div class="comment-body">
+            <div class="comment-text">
+              ${comment.text
+                .replaceAll("BEGIN_QUOTE", "<div class='quote'>")
+                .replaceAll("END_QUOTE", "</div>")}
+            </div>
+            <div class="quote"></div>
+          </div>
+          <div class="comment-footer">
+            <div class="likes">
+              <span class="likes-counter">${comment.likesCount}</span>
+              <button class="like-button ${
+                comment.isLiked ? "-active-like" : ""
+              }" data-index="${index}"></button>
+            </div>
+          </div>
+        </li>
+        `;
+      });
+      listElement.innerHTML = commentsList.join("");
+
+      likeComment();
+      replyToComment();
+    };
+
+    renderComments();
+
+    addBtn.addEventListener("click", () => {
+      if (nameInput.value === "" || commentInput.value === "") {
+        addBtn.classList.add("error");
+        return;
+      }
+
+      isLoading(true);
+
+      fetch("https://wedev-api.sky.pro/api/v1/magomed-alarkhanov/comments", {
+        method: "POST",
+        body: JSON.stringify({
+          name: nameInput.value,
+          text: commentInput.value,
+        }),
+      })
+        .then((response) => {
+          return response.json();
+        })
+        .then((responseData) => {
+          fetch(
+            "https://wedev-api.sky.pro/api/v1/magomed-alarkhanov/comments",
+            {
+              method: "GET",
+            }
+          )
+            .then((response) => {
+              return response.json();
+            })
+            .then((responseData) => {
+              isLoading(false);
+              comments = responseData.comments.map((comment) => ({
+                name: comment.author.name
+                  .replaceAll("<", "&lt;")
+                  .replaceAll(">", "&gt;"),
+                text: comment.text
+                  .replaceAll("<", "&lt;")
+                  .replaceAll(">", "&gt;"),
+                isLiked: comment.isLiked,
+                likesCount: comment.likes,
+                date: formattedDate,
+              }));
+              renderComments();
+            });
+        });
+
+      renderComments();
+
+      nameInput.value = "";
+      commentInput.value = "";
+    });
+
+    function isLoading(loading = false) {
+      const addBlockValue = loading ? "none" : "block";
+      const pendingBlockValue = loading ? "block" : "none";
+      addForm.style.display = addBlockValue;
+      pendingBlock.style.display = pendingBlockValue;
+    }
+
+    function likeComment() {
+      const likeBtns = document.querySelectorAll(".like-button");
+
+      for (const likeBtn of likeBtns) {
+        likeBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          const index = parseInt(event.target.dataset.index);
+          if (!comments[index].isLiked) {
+            comments[index].isLiked = true;
+            comments[index].likesCount++;
+          } else {
+            comments[index].isLiked = false;
+            comments[index].likesCount--;
+          }
+          renderComments();
+        });
+      }
+    }
+
+    function replyToComment() {
+      const commentsElements = document.querySelectorAll(".comment");
+
+      for (const commentElement of commentsElements) {
+        commentElement.addEventListener("click", (event) => {
+          event.stopPropagation();
+          commentInput.value = `BEGIN_QUOTE ${commentElement.dataset.text} END_QUOTE\n\n${commentElement.dataset.name}`;
+        });
+      }
+    }
+
+    renderComments();
+
+    nameInput.addEventListener("input", toggleButton);
+    commentInput.addEventListener("input", toggleButton);
+
+    function toggleButton() {
+      if (nameInput.value.trim() !== "" && commentInput.value.trim() !== "") {
+        addBtn.classList.remove("error");
+        addBtn.disabled = false;
+      } else {
+        addBtn.classList.add("error");
+        addBtn.disabled = true;
+      }
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        if (nameInput.value === "" || commentInput.value === "") {
+          addBtn.classList.add("error");
+          return;
+        }
+
+        isLoading(true);
+
+        fetch("https://wedev-api.sky.pro/api/v1/magomed-alarkhanov/comments", {
+          method: "POST",
+          body: JSON.stringify({
+            name: nameInput.value,
+            text: commentInput.value,
+          }),
+        })
+          .then((response) => {
+            return response.json();
+          })
+          .then((responseData) => {
+            fetch(
+              "https://wedev-api.sky.pro/api/v1/magomed-alarkhanov/comments",
+              {
+                method: "GET",
+              }
+            )
+              .then((response) => {
+                return response.json();
+              })
+              .then((responseData) => {
+                isLoading(false);
+                comments = responseData.comments.map((comment) => ({
+                  name: comment.author.name
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;"),
+                  text: comment.text
+                    .replaceAll("<", "&lt;")
+                    .replaceAll(">", "&gt;"),
+                  isLiked: comment.isLiked,
+                  likesCount: comment.likes,
+                  date: formattedDate,
+                }));
+                renderComments();
+              });
+          });
+
+        renderComments();
+
+        commentInput.value = "";
+        nameInput.value = "";
+      }
+    });
+
+    deleteBtn.addEventListener("click", () => {
+      const lastCommentElement = listElement.querySelector(
+        "li.comment:last-child"
+      );
+      if (lastCommentElement) {
+        listElement.removeChild(lastCommentElement);
+      }
+    });
   </script>
 </html>
