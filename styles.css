@@ -149,3 +149,7 @@ body {
   .error {
     background-color: grey;
   }
+
+  .hidden {
+    display: none;
+  }
