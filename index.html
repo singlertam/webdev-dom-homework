@@ -105,7 +105,7 @@
       fetch("https://wedev-api.sky.pro/api/v1/magomed-alarkhanov/comments")
         .then((response) => {
           if(response.status >= 500) {
-            throw new Error(`Ошибка ${response.status}`)
+            throw new Error(`Ошибка ${response.status}, cервер сломался, попробуй позже`)
           }
           return response.json()
         })
@@ -126,11 +126,13 @@
 
     buttonElement.addEventListener("click", () => {
       if (
-        nameInputElement.value.trim() === "" ||
-        commentInputElement.value.trim() === ""
+        // nameInputElement.value.trim() === "" ||
+        // commentInputElement.value.trim() === ""
+        nameInputElement.value.length < 3 ||
+        commentInputElement.value.length < 3
       ) {
         buttonElement.classList.add("error");
-        alert("Вы ввели недостаточное количество символов!")
+        alert("Имя и комментарий должны быть не короче 3 символов!")
         return;
       }
 
@@ -159,9 +161,11 @@
       })
         .then((response) => {
           if(response.status === 400) {
+            alert("Имя и комментарий должны быть не короче 3 символов");
             throw new Error(`Ошибка ${response.status}, неправильный запрос!`)
           }
           if(response.status >= 500) {
+            alert("Сервер сломался, попробуй позже");
             throw new Error(`Ошибка ${response.status}`)
           }
           return response.json()
@@ -175,8 +179,12 @@
           commentInputElement.value = "";
         })
         .catch((error) => {
+          if (error.message.includes("Failed to fetch")) {
+            alert("Кажется, у вас сломался интернет, попробуйте позже");
+          } else {
+            console.error(error);
+          }
           setPendingState(false);
-          console.error(error)
         });
     });
 
